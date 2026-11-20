@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>15-minute walk from 620 Sixth Ave</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root{--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--line:#e4e3de;--b700:#0d366b;--b650:#104281;--b550:#1c5cab;--b400:#3987e5;--b250:#86b6ef;
+        --good:#0ca30c;--goodText:#006300;--warn:#fab219;--warnText:#8a5a00;--crit:#d03b3b;}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--surface)}
+  .app{display:flex;height:100vh}
+  aside{width:390px;flex:none;overflow-y:auto;border-right:1px solid var(--line);padding:20px 20px 32px;background:var(--surface)}
+  #map{flex:1;height:100%}
+  h1{font-size:20px;line-height:1.25;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--ink2);margin:0 0 18px}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin:22px 0 8px;font-weight:600}
+  .check{display:flex;gap:6px}
+  .check input{flex:1;min-width:0;padding:9px 10px;border:1px solid #cfcdc6;border-radius:8px;font:inherit;background:#fff}
+  .check input:focus{outline:2px solid var(--b400);outline-offset:-1px;border-color:transparent}
+  .check button{padding:9px 14px;border:0;border-radius:8px;background:var(--b650);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+  .check button:hover{background:var(--b700)}
+  .hint{color:var(--ink2);font-size:12.5px;margin:6px 0 0}
+  #result{margin-top:10px;padding:10px 12px;border-radius:8px;background:#f2f1ed;display:none}
+  #result .big{font-size:18px;font-weight:650}
+  #result .where{color:var(--ink2);font-size:12.5px;margin-top:2px;word-break:break-word}
+  .verdict{display:inline-flex;align-items:center;gap:6px;font-weight:600;margin-top:4px}
+  .ico{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;font-size:11px;font-weight:800;color:#fff;flex:none}
+  .ico.good{background:var(--good)} .ico.warn{background:var(--warn);color:#0b0b0b} .ico.crit{background:var(--crit)}
+  .t-good{color:var(--goodText)} .t-warn{color:var(--warnText)} .t-crit{color:#a32626}
+  .legend{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
+  .sw{width:26px;height:14px;border-radius:3px}
+  .sw.line{height:0;border-top:2.5px solid var(--b650);border-radius:0}
+  .sw.dash{height:0;border-top:2px dashed var(--ink2);border-radius:0}
+  .sw.circ{height:14px;border:2px dotted #7a7870;border-radius:50%;width:14px;margin-left:6px}
+  label.tog{display:flex;gap:8px;align-items:flex-start;margin-top:10px;cursor:pointer;color:var(--ink2);font-size:13px}
+  .pick{border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:8px;cursor:pointer;background:#fff;transition:border-color .15s}
+  .pick:hover{border-color:var(--b400)}
+  .pick .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .pick .name{font-weight:650}
+  .pick .mins{font-variant-numeric:tabular-nums;color:var(--ink2);font-size:12.5px;white-space:nowrap}
+  .pick p{margin:4px 0 0;color:var(--ink2);font-size:13px}
+  .pick.top-pick{border-color:var(--b550);box-shadow:inset 3px 0 0 var(--b550)}
+  .badge{display:inline-block;font-size:11px;font-weight:700;color:#fff;background:var(--b550);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+  .out{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:13px}
+  .out span:nth-child(even){font-variant-numeric:tabular-nums;color:var(--ink2);text-align:right}
+  .fine{color:var(--ink2);font-size:12px;margin-top:22px;border-top:1px solid var(--line);padding-top:12px}
+  .fine a{color:var(--b550)}
+  .glinks{margin-top:6px;font-size:12.5px}
+  .glinks a{color:var(--b550);margin-right:10px}
+  .rule{background:#eef4fd;border-radius:8px;padding:9px 11px;font-size:13px;margin:0 0 4px}
+  .dot{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 11.5px/1 -apple-system,BlinkMacSystemFont,sans-serif;color:#fff;
+       border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transform:translate(-50%,-50%);position:absolute;left:0;top:0;cursor:default;font-variant-numeric:tabular-nums}
+  .dot.warn{color:#0b0b0b}
+  .office{width:30px;height:30px;border-radius:50%;background:var(--b700);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);display:grid;place-items:center;color:#fff;font-size:15px;transform:translate(-50%,-50%);position:absolute}
+  .home{width:16px;height:16px;border-radius:50%;background:#fff;border:4px solid var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.35);transform:translate(-50%,-50%);position:absolute}
+  .leaflet-tooltip{font-size:12.5px}
+  .basemap{filter:grayscale(.85) contrast(.9) brightness(1.04)}
+  @media (max-width:760px){.app{flex-direction:column-reverse;height:auto}#map{height:58vh;flex:none}aside{width:auto;border-right:0}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <h1>Where you can live: 620 Sixth Ave</h1>
+  <p class="sub">Office between W 18th &amp; W 19th St. Shaded areas are where Google Maps walking directions show <b>15 min or less</b>.</p>
+  <p class="rule">Rule: Google Maps must show 15 min or less (16 fails). Either direction and any time of day count. The bands are calibrated to Google using 32 spot checks taken Nov 20, 2026. All 32 land on the right side of the line.</p>
+
+  <h2>Check an apartment</h2>
+  <form class="check" id="f"><input id="q" placeholder="e.g. 245 W 17th St" autocomplete="off" aria-label="Apartment address"><button>Check</button></form>
+  <p class="hint">Or click anywhere on the map. You get an estimate of what Google will show, plus links to confirm on Google Maps.</p>
+  <div id="result" aria-live="polite"></div>
+
+  <h2>Map key (Google Maps walk time)</h2>
+  <div class="legend">
+    <span class="sw" style="background:rgba(28,92,171,.45)"></span><span>5 min or less</span>
+    <span class="sw" style="background:rgba(57,135,229,.35)"></span><span>6–10 min</span>
+    <span class="sw" style="background:rgba(134,182,239,.38)"></span><span>11–15 min</span>
+    <span class="sw line"></span><span><b>Qualifying line</b> (15 in, 16 out)</span>
+    <span class="sw dash"></span><span>About 20 min, for context</span>
+    <span><span class="ico good">✓</span></span><span>Dots show Google's actual time. Green: 13 min or less, comfortably in</span>
+    <span><span class="ico warn">!</span></span><span>14–15 min: qualifies, but check the exact building</span>
+    <span><span class="ico crit">×</span></span><span>16+ min: doesn't qualify</span>
+  </div>
+
+  <h2>Where I'd look</h2>
+  <div id="picks"></div>
+
+  <h2>Close, but out (Google time)</h2>
+  <div class="out" id="outs"></div>
+
+  <div class="fine">
+    How this works: walking routes are computed on OpenStreetMap sidewalks with the Valhalla router. Its speed is tuned to 4.3 km/h, about 2.7 mph, so its times match Google Maps, which runs about 10% slower than a generic 3 mph. Against 32 Google checks it's typically within ±0.5 min. The address checker times both directions and keeps the faster one. Anything near the line, confirm with the Google link before you sign.<br><br>
+    Rent context: Manhattan's median new-lease rent was about $4,965 in Oct 2026 (Miller Samuel). This whole radius generally rents above that. Map data © OpenStreetMap contributors.
+  </div>
+</aside>
+<div id="map" role="region" aria-label="Map of walking times"></div>
+</div>
+<script>
+const BANDS = {"g5":[[40.743133,-73.992559],[40.742968,-73.993418],[40.742997,-73.993559],[40.742565,-73.995559],[40.74226,-73.997559],[40.74211,-73.997939],[40.741715,-73.998165],[40.74111,-73.998338],[40.74011,-73.998196],[40.738988,-73.997681],[40.73811,-73.99737],[40.737601,-73.997068],[40.737188,-73.996559],[40.737277,-73.995559],[40.73756,-73.994559],[40.737684,-73.993559],[40.737951,-73.992559],[40.738009,-73.991559],[40.73811,-73.991391],[40.73911,-73.990814],[40.74011,-73.991109],[40.740388,-73.991281],[40.74111,-73.991582],[40.74211,-73.991851],[40.743133,-73.992559]],"g10":[[40.745885,-73.990559],[40.745891,-73.990778],[40.745784,-73.991234],[40.745789,-73.991559],[40.745501,-73.992559],[40.745342,-73.993792],[40.745183,-73.994559],[40.745158,-73.995559],[40.744883,-73.996333],[40.744525,-73.997559],[40.744337,-73.998787],[40.743887,-74.000559],[40.743639,-74.001089],[40.743269,-74.001719],[40.74311,-74.001871],[40.74211,-74.001983],[40.741046,-74.001623],[40.74011,-74.001165],[40.738822,-74.000847],[40.738074,-74.000595],[40.737414,-74.000255],[40.735862,-73.999807],[40.735275,-73.999394],[40.734637,-73.999032],[40.734338,-73.998559],[40.734533,-73.997559],[40.734639,-73.996559],[40.734745,-73.996195],[40.735035,-73.995559],[40.735184,-73.993634],[40.73541,-73.99286],[40.735666,-73.991559],[40.735814,-73.990264],[40.736029,-73.989479],[40.736182,-73.988632],[40.73711,-73.987419],[40.737861,-73.987311],[40.738287,-73.987382],[40.738979,-73.98769],[40.739724,-73.987945],[40.741097,-73.988572],[40.74211,-73.988796],[40.743343,-73.989326],[40.743961,-73.989708],[40.74511,-73.990004],[40.745475,-73.990194],[40.745885,-73.990559]],"g15":[[40.74854,-73.988559],[40.748561,-73.989559],[40.748263,-73.990713],[40.747984,-73.991559],[40.747762,-73.993559],[40.747376,-73.994826],[40.74689,-73.997559],[40.746427,-73.999559],[40.746066,-74.000559],[40.745994,-74.001559],[40.745771,-74.002559],[40.745413,-74.003863],[40.745261,-74.004711],[40.74511,-74.005101],[40.744859,-74.005309],[40.74411,-74.00566],[40.743318,-74.005351],[40.74211,-74.005133],[40.74111,-74.004606],[40.740376,-74.004293],[40.738338,-74.003788],[40.73711,-74.003625],[40.73611,-74.003163],[40.735646,-74.003023],[40.73511,-74.002893],[40.73411,-74.003117],[40.73311,-74.002673],[40.73273,-74.001939],[40.731721,-74.000948],[40.731552,-74.000559],[40.731803,-73.999253],[40.73211,-73.998053],[40.732342,-73.996792],[40.732421,-73.996559],[40.732493,-73.995559],[40.732923,-73.994559],[40.733107,-73.993557],[40.733186,-73.992483],[40.733,-73.991559],[40.733072,-73.990597],[40.733264,-73.989559],[40.734099,-73.988559],[40.734508,-73.986559],[40.735076,-73.984559],[40.735586,-73.984035],[40.73611,-73.983748],[40.73811,-73.984295],[40.73911,-73.98472],[40.74011,-73.985029],[40.740477,-73.985192],[40.74311,-73.98592],[40.745465,-73.987204],[40.74611,-73.987467],[40.746975,-73.987694],[40.747602,-73.988067],[40.748314,-73.988355],[40.74854,-73.988559]],"g20":[[40.751183,-73.986559],[40.751501,-73.987168],[40.751592,-73.987559],[40.751501,-73.988559],[40.750743,-73.990559],[40.750614,-73.991559],[40.750424,-73.991874],[40.75011,-73.992076],[40.749903,-73.992353],[40.749837,-73.992559],[40.749871,-73.992798],[40.750215,-73.993454],[40.750207,-73.993657],[40.749816,-73.994559],[40.749856,-73.995559],[40.749521,-73.996559],[40.749414,-73.997559],[40.749188,-73.998638],[40.748898,-73.999559],[40.748806,-74.000559],[40.748512,-74.001559],[40.748395,-74.002559],[40.748327,-74.002777],[40.747957,-74.003407],[40.747887,-74.003782],[40.747852,-74.004559],[40.747598,-74.005048],[40.747439,-74.005559],[40.747152,-74.007559],[40.746801,-74.008251],[40.746597,-74.008559],[40.74629,-74.00874],[40.745478,-74.008928],[40.74511,-74.009107],[40.744711,-74.008958],[40.743841,-74.008828],[40.743126,-74.008576],[40.742232,-74.008437],[40.74111,-74.007886],[40.74011,-74.007868],[40.73911,-74.008345],[40.73711,-74.008169],[40.73611,-74.007403],[40.735418,-74.007251],[40.73511,-74.007102],[40.734801,-74.007251],[40.73411,-74.007418],[40.733255,-74.007414],[40.73311,-74.007361],[40.732765,-74.006904],[40.73211,-74.006611],[40.73111,-74.005779],[40.730596,-74.005073],[40.729636,-74.004033],[40.729002,-74.003559],[40.728676,-74.002993],[40.728503,-74.002559],[40.729227,-73.999559],[40.729327,-73.998559],[40.729348,-73.997559],[40.729443,-73.997226],[40.729473,-73.996923],[40.729823,-73.996272],[40.730121,-73.995559],[40.730319,-73.994559],[40.730498,-73.993948],[40.730674,-73.993559],[40.730465,-73.993204],[40.72999,-73.992679],[40.729982,-73.992432],[40.730173,-73.991623],[40.730028,-73.990559],[40.730738,-73.988559],[40.731241,-73.987691],[40.73144,-73.98689],[40.73228,-73.98473],[40.732767,-73.983217],[40.733063,-73.982559],[40.733294,-73.981559],[40.733541,-73.980991],[40.73411,-73.980368],[40.734683,-73.980133],[40.73511,-73.980072],[40.73611,-73.98052],[40.7377,-73.980969],[40.739077,-73.981592],[40.740716,-73.981953],[40.743043,-73.982626],[40.743735,-73.982934],[40.74511,-73.983395],[40.74611,-73.983552],[40.746556,-73.984113],[40.74711,-73.984515],[40.74795,-73.984719],[40.748428,-73.985241],[40.748945,-73.985559],[40.749783,-73.985886],[40.751183,-73.986559]]};
+const SPOTS = [{"label":"Broadway & 20th St","area":"Flatiron","lat":40.7391688,"lon":-73.9897506,"google":8},{"label":"5th Ave & 23rd St","area":"Flatiron","lat":40.7415506,"lon":-73.9895966,"google":9},{"label":"7th Ave & 14th St","area":"Chelsea","lat":40.7385578,"lon":-73.99968,"google":9},{"label":"8th Ave & 20th St","area":"Chelsea","lat":40.7434291,"lon":-73.9998503,"google":9},{"label":"Greenwich Ave & W 10th St","area":"West Village","lat":40.7346949,"lon":-73.9999737,"google":11},{"label":"Irving Pl & 19th St","area":"Gramercy","lat":40.7370554,"lon":-73.9865427,"google":11},{"label":"8th Ave & 15th St","area":"Chelsea","lat":40.7404441,"lon":-74.0019879,"google":11},{"label":"9th Ave & 18th St","area":"Chelsea","lat":40.7434761,"lon":-74.0035806,"google":12},{"label":"Broadway & 14th St","area":"Union Square","lat":40.7347875,"lon":-73.9907407,"google":13},{"label":"7th Ave & 27th St","area":"Chelsea","lat":40.746618,"lon":-73.993813,"google":13},{"label":"3rd Ave & 18th St","area":"Gramercy","lat":40.7357989,"lon":-73.9853657,"google":13},{"label":"Irving Pl & 15th St","area":"Union Square","lat":40.7346528,"lon":-73.9882945,"google":14},{"label":"Broadway & 30th St","area":"NoMad","lat":40.7467961,"lon":-73.9884727,"google":14},{"label":"5th Ave & 9th St","area":"Greenwich Village","lat":40.7328696,"lon":-73.9959296,"google":15},{"label":"6th Ave & 32nd St","area":"Koreatown / Herald Sq","lat":40.7485081,"lon":-73.9886948,"google":15},{"label":"University Pl & 11th St","area":"Greenwich Village","lat":40.733304,"lon":-73.993322,"google":15},{"label":"Lexington Ave & 23rd St","area":"Gramercy","lat":40.7395138,"lon":-73.9847521,"google":16},{"label":"Bank St & W 4th St","area":"West Village","lat":40.736839,"lon":-74.003714,"google":16},{"label":"Madison Ave & 28th St","area":"NoMad","lat":40.7440084,"lon":-73.9856962,"google":17},{"label":"9th Ave & 14th St","area":"Meatpacking","lat":40.7408488,"lon":-74.0051364,"google":16},{"label":"9th Ave & 23rd St","area":"Chelsea","lat":40.7465212,"lon":-74.0013497,"google":16},{"label":"10th Ave & 20th St","area":"West Chelsea","lat":40.7458171,"lon":-74.005534,"google":17},{"label":"5th Ave & Washington Sq N","area":"Washington Square","lat":40.7314217,"lon":-73.996981,"google":17},{"label":"Bleecker St & W 11th St","area":"West Village","lat":40.735971,"lon":-74.0051285,"google":17},{"label":"3rd Ave & 13th St","area":"East Village","lat":40.7326183,"lon":-73.9876834,"google":18},{"label":"1st Ave & 18th St","area":"Stuy Town","lat":40.7338271,"lon":-73.9807369,"google":20},{"label":"8th Ave & 31st St","area":"Penn Station","lat":40.7502936,"lon":-73.9948451,"google":21},{"label":"Varick St & Houston St","area":"Hudson Square","lat":40.7286179,"lon":-74.0053218,"google":23},{"label":"3rd Ave & 28th St","area":"Kips Bay","lat":40.7419813,"lon":-73.9808707,"google":23},{"label":"2nd Ave & St Marks Pl","area":"East Village","lat":40.7286043,"lon":-73.9876651,"google":25},{"label":"Lexington Ave & 34th St","area":"Murray Hill","lat":40.7464063,"lon":-73.9797439,"google":28},{"label":"10th Ave & 30th St","area":"Hudson Yards","lat":40.7520747,"lon":-74.0009801,"google":28}];
+const OFFICE = [40.74011, -73.99456];
+const OFFICE_ADDR = '620 Avenue of the Americas, New York, NY 10011';
+const SPEED = 4.3;      // km/h, calibrated to Google Maps walking times
+const CUT = 15.4;       // router minutes: below this, Google showed <=15 in every check
+
+const map = L.map('map').setView([40.7395,-73.9935], 15);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, className:'basemap',
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+
+L.polygon([BANDS.g15, BANDS.g10], {stroke:false, fillColor:'#86b6ef', fillOpacity:.38, interactive:false}).addTo(map);
+L.polygon([BANDS.g10, BANDS.g5],  {stroke:false, fillColor:'#3987e5', fillOpacity:.35, interactive:false}).addTo(map);
+L.polygon([BANDS.g5],             {stroke:false, fillColor:'#1c5cab', fillOpacity:.45, interactive:false}).addTo(map);
+L.polygon(BANDS.g15, {color:'#104281', weight:3, fill:false, interactive:false}).addTo(map);
+L.polygon(BANDS.g20, {color:'#52514e', weight:2, dashArray:'6 6', fill:false, interactive:false}).addTo(map);
+
+L.marker(OFFICE, {icon:L.divIcon({className:'', html:'<div class="office">★</div>', iconSize:[0,0]}), zIndexOffset:1000})
+  .bindTooltip('<b>620 Avenue of the Americas</b><br>the office', {direction:'top', offset:[0,-14]}).addTo(map);
+
+const gStatus = g => g <= 13 ? ['good','✓','Comfortably in','t-good'] : g <= 15 ? ['warn','!','Qualifies, near the limit','t-warn'] : ['crit','×','Doesn\'t qualify','t-crit'];
+const colorOf = {good:'#0ca30c', warn:'#fab219', crit:'#d03b3b'};
+for (const s of SPOTS) {
+  const [k,,lab] = gStatus(s.google);
+  L.marker([s.lat, s.lon], {icon:L.divIcon({className:'', html:`<div class="dot ${k}" style="background:${colorOf[k]}">${s.google}</div>`, iconSize:[0,0]})})
+   .bindTooltip(`<b>${s.label}</b> · ${s.area}<br>Google Maps: <b>${s.google} min</b> walk<br>${lab}`, {direction:'top', offset:[0,-12]})
+   .addTo(map);
+}
+
+const PICKS = [
+  {name:'Chelsea, 7th–8th Ave, 14th–22nd St', mins:'9–12 min', top:true, at:[40.7415,-73.9995], z:16,
+   note:'The best mix of margin, choice and price. Brownstone and walk-up side streets, plus doorman buildings on the avenues, and you\'re 3–6 min inside the cap. 9th Ave also works in the middle (18th St: 12 min), but its corners at 14th and 23rd are 16, so they\'re out. Trains: 1, A/C/E, L, F/M.'},
+  {name:'Gramercy & Irving Place, west of 3rd Ave, 15th–22nd St', mins:'11–14 min', at:[40.7368,-73.9870], z:16,
+   note:'Quieter, residential and prewar, and usually better value than Flatiron. Irving & 19th is 11, 3rd Ave & 18th is 13. Lexington & 23rd is already 16, so stay south and west of there.'},
+  {name:'Flatiron / Madison Square', mins:'8–9 min', at:[40.7405,-73.9895], z:16,
+   note:'The shortest walk and the priciest stock: loft conversions and new doorman towers.'},
+  {name:'North Chelsea / NoMad west of 5th Ave, up to about 30th St', mins:'13–15 min', at:[40.7460,-73.9910], z:16,
+   note:'Newer towers. 7th & 27th is 13, Broadway & 30th is 14, and 6th & 32nd is 15, right at the limit. East of 5th it falls off fast: Madison & 28th is 17.'},
+  {name:'Union Square & just south', mins:'13–15 min', at:[40.7345,-73.9925], z:16,
+   note:'Best subway hub (4/5/6, L, N/Q/R/W). Union Sq is 13, but University Pl & 11th and 5th Ave & 9th are both exactly 15. Washington Sq North is 17, so it\'s out.'},
+  {name:'Northeast tip of the West Village, Greenwich Ave around W 10th–13th St', mins:'11–15 min', at:[40.7360,-74.0005], z:16,
+   note:'Only the part right by Greenwich Ave and 7th Ave S. Greenwich & W 10th is 11, but Bank & W 4th is 16 and Bleecker & W 11th is 17. It\'s small and pricey.'},
+];
+const picksEl = document.getElementById('picks');
+for (const p of PICKS) {
+  const d = document.createElement('div');
+  d.className = 'pick' + (p.top ? ' top-pick' : '');
+  d.innerHTML = `<div class="top"><span class="name">${p.name}${p.top?'<span class="badge">TOP PICK</span>':''}</span><span class="mins">${p.mins}</span></div><p>${p.note}</p>`;
+  d.onclick = () => map.flyTo(p.at, p.z, {duration:.8});
+  picksEl.appendChild(d);
+}
+document.getElementById('outs').innerHTML = SPOTS.filter(s => s.google > 15).sort((a,b) => a.google-b.google)
+  .map(s => `<span>${s.area} <span style="color:#8a8880">(${s.label})</span></span><span>${s.google} min</span>`).join('');
+
+// --- Address / click checker ---
+const resEl = document.getElementById('result');
+let routeLayer = null, homeMarker = null;
+function decode6(str){let i=0,lat=0,lng=0,out=[];while(i<str.length){let b,s=0,r=0;do{b=str.charCodeAt(i++)-63;r|=(b&31)<<s;s+=5}while(b>=32);lat+=(r&1)?~(r>>1):(r>>1);s=0;r=0;do{b=str.charCodeAt(i++)-63;r|=(b&31)<<s;s+=5}while(b>=32);lng+=(r&1)?~(r>>1):(r>>1);out.push([lat/1e6,lng/1e6])}return out}
+function show(html){resEl.style.display='block';resEl.innerHTML=html}
+async function walk(a, b){
+  const q = {locations:[a,b], costing:'pedestrian', costing_options:{pedestrian:{walking_speed:SPEED}}};
+  const r = await fetch('https://valhalla1.openstreetmap.de/route?json=' + encodeURIComponent(JSON.stringify(q)));
+  const j = await r.json();
+  if (!j.trip) throw new Error(j.error || 'No route found');
+  return {t:j.trip.summary.time/60, mi:j.trip.summary.length*0.621371, shape:j.trip.legs[0].shape};
+}
+const gmaps = (o, d) => 'https://www.google.com/maps/dir/?api=1&travelmode=walking&origin=' + encodeURIComponent(o) + '&destination=' + encodeURIComponent(d);
+let reqId = 0;
+async function routeFrom(lat, lon, label, query){
+  const my = ++reqId;
+  show('Calculating walk…');
+  const home = {lat, lon}, work = {lat:OFFICE[0], lon:OFFICE[1]};
+  try {
+    const [toWork, toHome] = await Promise.all([walk(home, work), walk(work, home)]);
+    if (my !== reqId) return;   // a newer check superseded this one
+    const best = toWork.t <= toHome.t ? toWork : toHome;
+    const t = best.t;
+    const est = t < CUT ? Math.min(Math.round(t), 15) : Math.max(Math.round(t), 16);
+    const k = est <= 13 ? 'good' : est <= 15 ? 'warn' : 'crit';
+    const [ , ic, , tc] = gStatus(est);
+    const verdict = k === 'good' ? 'Qualifies, with room to spare'
+                  : k === 'warn' ? 'Probably qualifies, but it\'s right at the limit. Confirm on Google.'
+                  : 'Probably doesn\'t qualify';
+    if (routeLayer) routeLayer.remove(); if (homeMarker) homeMarker.remove();
+    routeLayer = L.polyline(decode6(best.shape), {color:'#0b0b0b', weight:4, opacity:.85}).addTo(map);
+    homeMarker = L.marker([lat,lon], {icon:L.divIcon({className:'', html:'<div class="home"></div>', iconSize:[0,0]})}).addTo(map);
+    map.fitBounds(routeLayer.getBounds().pad(.35), {maxZoom:16});
+    const here = query || `${lat.toFixed(6)},${lon.toFixed(6)}`;
+    show(`<div class="big">Google will likely show ~${est} min</div>
+          <div class="verdict ${tc}"><span class="ico ${k}">${ic}</span>${verdict}</div>
+          <div class="where">${best.mi.toFixed(2)} mi · ${label}</div>
+          <div class="glinks">Confirm on Google: <a href="${gmaps(here, OFFICE_ADDR)}" target="_blank" rel="noopener">home → office</a><a href="${gmaps(OFFICE_ADDR, here)}" target="_blank" rel="noopener">office → home</a></div>`);
+  } catch(e) { show('Couldn\'t get a walking route: ' + e.message); }
+}
+document.getElementById('f').onsubmit = async e => {
+  e.preventDefault();
+  const raw = document.getElementById('q').value.trim(); if (!raw) return;
+  const q = /new york|ny\b|manhattan|brooklyn|queens/i.test(raw) ? raw : raw + ', New York, NY';
+  show('Looking up address…');
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&viewbox=-74.03,40.80,-73.90,40.68&bounded=1&q=' + encodeURIComponent(q));
+    const j = await r.json();
+    if (!j.length) return show('Couldn\'t find that address. Try adding the street type, like "245 W 17th St".');
+    routeFrom(+j[0].lat, +j[0].lon, j[0].display_name.split(',').slice(0,4).join(','), q);
+  } catch(e) { show('Address lookup failed: ' + e.message); }
+};
+let clickTimer = null;
+map.on('click', e => { clearTimeout(clickTimer); clickTimer = setTimeout(() => routeFrom(e.latlng.lat, e.latlng.lng, 'Dropped pin'), 260); });
+map.on('dblclick', () => clearTimeout(clickTimer));
+</script>
+</body>
+</html>
