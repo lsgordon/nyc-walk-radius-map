@@ -9,6 +9,7 @@ Open `index.html` in a browser.
 - **Walk-time bands** (≤5, 6–10, 11–15 min) and a bold **qualifying line** where Google Maps flips from 15 to 16 min.
 - **32 spot checks**: dots labelled with the actual Google Maps walking time to each intersection, collected Nov 20, 2026.
 - **Address checker**: type an address or click the map. It estimates the Google Maps walking time (faster of the two directions) and links to Google Maps to confirm.
+- **StreetEasy link**: [rentals inside the 15-minute shape](https://streeteasy.com/for-rent/nyc/boundary:Custom%20Boundary-kuuwFn%7BqbMCfElI~p%40dItk%40nAvBtCdAzs%40oOrHRfEyAvHeLwHwj%40ToKs%40oKgDgEcE_XeBgBgBy%40wj%40pL%7D%60%40nO%7Cin_rect:40.728,40.753,-74.010,-73.980). StreetEasy saves a drawn search area in the URL as a Google-encoded polyline, so the shape is simplified to 18 points and encoded the same way. It still puts all 32 spot checks on the right side.
 - Neighborhood recommendations and the nearby areas that fall just outside.
 
 ## How it's calibrated

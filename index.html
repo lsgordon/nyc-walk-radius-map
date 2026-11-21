@@ -50,6 +50,9 @@
   .fine a{color:var(--b550)}
   .glinks{margin-top:6px;font-size:12.5px}
   .glinks a{color:var(--b550);margin-right:10px}
+  .se{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px 0 2px;padding:10px 14px;border-radius:8px;background:var(--b650);color:#fff;font-weight:600;text-decoration:none}
+  .se:hover{background:var(--b700)}
+  .se-note{color:var(--ink2);font-size:12.5px;margin:6px 0 0}
   .rule{background:#eef4fd;border-radius:8px;padding:9px 11px;font-size:13px;margin:0 0 4px}
   .dot{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 11.5px/1 -apple-system,BlinkMacSystemFont,sans-serif;color:#fff;
        border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transform:translate(-50%,-50%);position:absolute;left:0;top:0;cursor:default;font-variant-numeric:tabular-nums}
@@ -67,6 +70,9 @@
   <h1>Where you can live: 620 Sixth Ave</h1>
   <p class="sub">Office between W 18th &amp; W 19th St. Shaded areas are where Google Maps walking directions show <b>15 min or less</b>.</p>
   <p class="rule">Rule: Google Maps must show 15 min or less (16 fails). Either direction and any time of day count. The bands are calibrated to Google using 32 spot checks taken Nov 20, 2026. All 32 land on the right side of the line.</p>
+
+  <a class="se" href="https://streeteasy.com/for-rent/nyc/boundary:Custom%20Boundary-kuuwFn%7BqbMCfElI~p%40dItk%40nAvBtCdAzs%40oOrHRfEyAvHeLwHwj%40ToKs%40oKgDgEcE_XeBgBgBy%40wj%40pL%7D%60%40nO%7Cin_rect:40.728,40.753,-74.010,-73.980" target="_blank" rel="noopener">Search StreetEasy rentals in this area →</a>
+  <p class="se-note">Opens StreetEasy with this 15-minute shape as a custom boundary. Add price and bed filters there; the shape stays. Listings near the edge still need a Google check.</p>
 
   <h2>Check an apartment</h2>
   <form class="check" id="f"><input id="q" placeholder="e.g. 245 W 17th St" autocomplete="off" aria-label="Apartment address"><button>Check</button></form>
