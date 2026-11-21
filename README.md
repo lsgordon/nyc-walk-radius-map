@@ -9,7 +9,7 @@ Open `index.html` in a browser.
 - **Walk-time bands** (≤5, 6–10, 11–15 min) and a bold **qualifying line** where Google Maps flips from 15 to 16 min, to whichever office is closer.
 - **48 spot checks** at 32 intersections: dots labelled with the actual Google Maps walking time to the closer office, collected Nov 20–21, 2026.
 - **Address checker**: type an address or click the map. It estimates the Google Maps walking time (fastest of both directions to both offices) and links to Google Maps to confirm.
-- **StreetEasy link**: [rentals inside the 15-minute shape](https://streeteasy.com/for-rent/nyc/boundary:Custom%20Boundary-meuwFjtqbMRmExJyFvQqCnd%40mLpCv%40%7CAzDzBnP%7CBfE%5EfEfBlDjChLIzCqBtAjAlPnBnK_GbCrBjOa%40lAiEdEkApCgExAsHScHvBmSdCyIfDoKhBgEoBqTc%60BBgEl%40g%40nM%7BD%7Cin_rect:40.729,40.751,-74.008,-73.980). StreetEasy saves a drawn search area in the URL as a Google-encoded polyline, so the shape is simplified to 32 points and encoded the same way. It still puts all 32 intersections on the right side.
+- **StreetEasy link**: [rentals inside the 15-minute shape](https://streeteasy.com/for-rent/nyc/boundary:Custom%20Boundary-meuwFjtqbMRmExJyFvQqCnd%40mLpCv%40zAxD~BrPzBdE%5EfEfBlDjChLIzCqBtAjAlPnBnK_G%60CrBlOa%40lAiEdEkApCgExAsHScHvBmSdCyIfDoKhBgEoBqTc%60BBgEl%40i%40nMyD%7Cin_rect:40.729,40.751,-74.008,-73.980). StreetEasy saves a drawn search area in the URL as a Google-encoded polyline, so the shape is simplified to 32 points and encoded the same way. It still puts all 32 intersections on the right side.
 - Neighborhood recommendations and the nearby areas that fall just outside.
 
 ## How it's calibrated
